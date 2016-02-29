@@ -26,7 +26,9 @@ public class HackerNewsProducer {
     }
 
     public void sendStory(Map<String, Object> story) {
-        producer.send(new ProducerRecord<>("test", "message", (String) story.get("title")));
+        String by = (String) story.get("by");
+        String title = (String) story.get("title");
+        producer.send(new ProducerRecord<>("test", "message", String.format("%s- %s", by, title)));
     }
 
     public static void main(String[] args) {
