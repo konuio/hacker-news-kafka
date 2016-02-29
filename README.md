@@ -8,7 +8,7 @@ Starting Kafka and Zookeeper
 ---
 ```
 brew install zookeeper
-brew install kafka
+# Get Kafka from http://kafka.apache.org/downloads.html
 
 zookeeper-server-start.sh zookeeper/zookeeper.properties
 zookeeper-server-stop.sh zookeeper/zookeeper.properties
