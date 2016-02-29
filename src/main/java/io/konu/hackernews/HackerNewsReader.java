@@ -10,36 +10,32 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 /**
  * Created by matt on 2/28/16.
  */
 public class HackerNewsReader {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HackerNewsReader.class);
-    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+    private static Logger LOGGER = LoggerFactory.getLogger(HackerNewsReader.class);
 
-    private final Firebase hackerNewsRef;
-    private final Firebase itemRef;
-    private final Firebase topStoriesRef;
+    private Firebase hackerNewsRef;
+    private Firebase itemRef;
+    private Firebase topStoriesRef;
 
-    public HackerNewsReader(final Firebase hackerNewsRef) {
+    public HackerNewsReader(Firebase hackerNewsRef) {
         this.hackerNewsRef = hackerNewsRef;
 
         itemRef = hackerNewsRef.child("item");
         topStoriesRef = hackerNewsRef.child("topstories");
     }
 
-    public void getTopStories(final Consumer<Map<String, Object>> storyConsumer) {
+    public void getTopStories(Consumer<Map<String, Object>> storyConsumer) {
         try {
-            final int limit = 10;
-            final CountDownLatch latch = new CountDownLatch(limit);
+            int limit = 10;
+            CountDownLatch latch = new CountDownLatch(limit);
             topStoriesRef.limitToFirst(limit).addListenerForSingleValueEvent(new ValueEventListener() {
-                public void onDataChange(final DataSnapshot snapshot) {
+                public void onDataChange(DataSnapshot snapshot) {
                     LOGGER.info("Received stories from Firebase {}", snapshot.getValue());
                     List<Long> storyIds = (List<Long>) snapshot.getValue();
                     for (long storyId : storyIds) {
@@ -47,7 +43,7 @@ public class HackerNewsReader {
                     }
                 }
 
-                public void onCancelled(final FirebaseError error) {
+                public void onCancelled(FirebaseError error) {
                     HackerNewsReader.this.onCancelled(error);
                 }
             });
@@ -57,29 +53,29 @@ public class HackerNewsReader {
         }
     }
 
-    private void getStory(final CountDownLatch latch, final long storyId, final Consumer<Map<String, Object>> storyConsumer) {
+    private void getStory(CountDownLatch latch, long storyId, Consumer<Map<String, Object>> storyConsumer) {
         itemRef.child(Long.toString(storyId)).addListenerForSingleValueEvent(new ValueEventListener() {
-            public void onDataChange(final DataSnapshot snapshot) {
+            public void onDataChange(DataSnapshot snapshot) {
                 Map<String, Object> story = (Map<String, Object>) snapshot.getValue();
                 LOGGER.info("Received story from Firebase {}", story);
                 storyConsumer.accept(story);
                 latch.countDown();
             }
 
-            public void onCancelled(final FirebaseError error) {
+            public void onCancelled(FirebaseError error) {
                 HackerNewsReader.this.onCancelled(error);
             }
         });
     }
 
-    private void onCancelled(final FirebaseError error) {
+    private void onCancelled(FirebaseError error) {
         LOGGER.info("Received cancellation from Firebase {}", error);
     }
 
-    public static void main(final String[] args) {
+    public static void main(String[] args) {
         try {
-            final Firebase hackerNewsRef = new Firebase("https://hacker-news.firebaseio.com/v0");
-            final HackerNewsReader reader = new HackerNewsReader(hackerNewsRef);
+            Firebase hackerNewsRef = new Firebase("https://hacker-news.firebaseio.com/v0");
+            HackerNewsReader reader = new HackerNewsReader(hackerNewsRef);
             reader.getTopStories(story -> {
                 LOGGER.info("Main received story from Firebase {}", story);
             });
